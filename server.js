@@ -2,12 +2,31 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const app = express();
 
 // Hostinger provides PORT via environment variable
 // Default to 3000 for local development
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
+
+// Create a log file for debugging
+const LOG_FILE = './app.log';
+function log(message) {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${message}\n`;
+  console.log(logMessage.trim());
+  try {
+    fsSync.appendFileSync(LOG_FILE, logMessage);
+  } catch (err) {
+    console.error('Failed to write to log file:', err);
+  }
+}
+
+log('Application starting...');
+log(`PORT: ${PORT}`);
+log(`HOST: ${HOST}`);
+log(`Directory: ${__dirname}`);
 
 // Middleware
 app.use(express.json());
@@ -25,13 +44,17 @@ const QUERIES_FILE = path.join(DATA_DIR, 'queries.json');
 async function ensureDataDir() {
   try {
     await fs.access(DATA_DIR);
+    log('Data directory exists');
   } catch {
+    log('Creating data directory');
     await fs.mkdir(DATA_DIR, { recursive: true });
   }
   
   try {
     await fs.access(QUERIES_FILE);
+    log('Queries file exists');
   } catch {
+    log('Creating queries file');
     await fs.writeFile(QUERIES_FILE, JSON.stringify([]));
   }
 }
@@ -155,12 +178,14 @@ app.get('/', (req, res) => {
 
 // Start server
 ensureDataDir().then(() => {
+  log('Data directory initialized');
   app.listen(PORT, HOST, () => {
-    console.log(`Server running on ${HOST}:${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`Current directory: ${__dirname}`);
+    log(`Server running on ${HOST}:${PORT}`);
+    log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   });
 }).catch(err => {
+  log(`FATAL ERROR: ${err.message}`);
+  log(`Stack: ${err.stack}`);
   console.error('Failed to start server:', err);
   process.exit(1);
 });
