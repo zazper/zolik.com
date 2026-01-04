@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Name - Personal Homepage</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .links a {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .links a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .query-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+        }
+
+        .query-section h2 {
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        #queryInput {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        #queryInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        #submitBtn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.3s;
+        }
+
+        #submitBtn:hover {
+            transform: scale(1.05);
+        }
+
+        #submitBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .response {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
+        .response.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .game-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .game-section h2 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        #gameCanvas {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: crosshair;
+            background: white;
+            display: block;
+            margin: 20px auto;
+            max-width: 100%;
+        }
+
+        .game-controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .game-controls button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .game-controls button:hover {
+            background: #764ba2;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+
+            #gameCanvas {
+                width: 100%;
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Your Name</h1>
+            <p>Developer | Creator | Thinker</p>
+            <div class="links">
+                <a href="https://linkedin.com/in/yourprofile" target="_blank">LinkedIn</a>
+                <a href="/resume.pdf" target="_blank">Resume</a>
+                <a href="https://github.com/yourusername" target="_blank">GitHub</a>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="query-section">
+                <h2>What is on your mind today?</h2>
+                <p>Ask me anything or share your thoughts. I'll do my best to help!</p>
+                <div class="input-group">
+                    <input type="text" id="queryInput" placeholder="Type your question or thought here...">
+                    <button id="submitBtn">Send</button>
+                </div>
+                <div id="response" class="response"></div>
+            </div>
+
+            <div class="game-section">
+                <h2>Particle Playground</h2>
+                <p>Click and drag to create colorful particles!</p>
+                <canvas id="gameCanvas" width="800" height="400"></canvas>
+                <div class="game-controls">
+                    <button id="clearBtn">Clear</button>
+                    <button id="gravityBtn">Toggle Gravity</button>
+                    <button id="colorBtn">Random Colors</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Query handling
+        const queryInput = document.getElementById('queryInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const responseDiv = document.getElementById('response');
+
+        async function handleQuery() {
+            const query = queryInput.value.trim();
+            if (!query) return;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            responseDiv.classList.remove('show');
+
+            try {
+                const response = await fetch('/api/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                const data = await response.json();
+                responseDiv.textContent = data.response;
+                responseDiv.classList.add('show');
+
+                if (data.isComplex && data.redirect) {
+                    setTimeout(() => {
+                        responseDiv.textContent += ' Redirecting...';
+                    }, 2000);
+                }
+
+                queryInput.value = '';
+            } catch (error) {
+                responseDiv.textContent = 'Thanks for your message! It has been logged for review.';
+                responseDiv.classList.add('show');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send';
+            }
+        }
+
+        submitBtn.addEventListener('click', handleQuery);
+        queryInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleQuery();
+        });
+
+        // Particle game
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const particles = [];
+        let isMouseDown = false;
+        let mouseX = 0;
+        let mouseY = 0;
+        let gravity = true;
+        let colorMode = 'rainbow';
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.radius = Math.random() * 3 + 2;
+                this.color = this.getColor();
+                this.life = 1;
+            }
+
+            getColor() {
+                if (colorMode === 'rainbow') {
+                    const hue = Math.random() * 360;
+                    return `hsl(${hue}, 70%, 60%)`;
+                } else {
+                    return `hsl(${colorMode}, 70%, 60%)`;
+                }
+            }
+
+            update() {
+                if (gravity) {
+                    this.vy += 0.2;
+                }
+                
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= 0.005;
+
+                if (this.y + this.radius > canvas.height) {
+                    this.y = canvas.height - this.radius;
+                    this.vy *= -0.7;
+                }
+
+                if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+                    this.vx *= -1;
+                }
+            }
+
+            draw() {
+                ctx.globalAlpha = this.life;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (isMouseDown) {
+                for (let i = 0; i < 3; i++) {
+                    particles.push(new Particle(mouseX, mouseY));
+                }
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isMouseDown = false;
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            particles.length = 0;
+        });
+
+        document.getElementById('gravityBtn').addEventListener('click', () => {
+            gravity = !gravity;
+        });
+
+        document.getElementById('colorBtn').addEventListener('click', () => {
+            if (colorMode === 'rainbow') {
+                colorMode = Math.random() * 360;
+            } else {
+                colorMode = 'rainbow';
+            }
+        });
+
+        animate();
+    </script>
+</body>
+</html>
