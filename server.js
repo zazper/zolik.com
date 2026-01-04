@@ -14,14 +14,29 @@ const HOST = process.env.HOST || '0.0.0.0';
 const LOG_FILE = './app.log';
 function log(message) {
   const timestamp = new Date().toISOString();
-  const logMessage = `[${timestamp}] ${message}\n`;
-  console.log(logMessage.trim());
+  const logMessage = `[${timestamp}] ${message}`;
+  console.log(logMessage);
   try {
-    fsSync.appendFileSync(LOG_FILE, logMessage);
+    fsSync.appendFileSync(LOG_FILE, logMessage + '\n');
   } catch (err) {
-    console.error('Failed to write to log file:', err);
+    // If we can't write to file, at least console.log works
+    console.error('Failed to write to log file:', err.message);
   }
 }
+
+// Log uncaught errors
+process.on('uncaughtException', (err) => {
+  log(`UNCAUGHT EXCEPTION: ${err.message}`);
+  log(`Stack: ${err.stack}`);
+  console.error(err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  log(`UNHANDLED REJECTION: ${reason}`);
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
 
 log('Application starting...');
 log(`PORT: ${PORT}`);
@@ -35,6 +50,29 @@ app.use(express.static('public'));
 // Health check endpoint for monitoring
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Debug endpoint to check file system
+app.get('/debug', async (req, res) => {
+  try {
+    const files = await fs.readdir(__dirname);
+    const publicFiles = await fs.readdir(path.join(__dirname, 'public')).catch(() => ['public folder not found']);
+    const configExists = await fs.access('./config.json').then(() => true).catch(() => false);
+    
+    res.json({
+      status: 'running',
+      directory: __dirname,
+      port: PORT,
+      host: HOST,
+      files: files,
+      publicFiles: publicFiles,
+      configExists: configExists,
+      nodeVersion: process.version,
+      env: process.env.NODE_ENV || 'not set'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Ensure data directory exists
