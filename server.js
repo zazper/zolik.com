@@ -4,11 +4,19 @@ const path = require('path');
 const fs = require('fs').promises;
 const app = express();
 
+// Hostinger provides PORT via environment variable
+// Default to 3000 for local development
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 // Middleware
 app.use(express.json());
 app.use(express.static('public'));
+
+// Health check endpoint for monitoring
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // Ensure data directory exists
 const DATA_DIR = './data';
@@ -147,7 +155,12 @@ app.get('/', (req, res) => {
 
 // Start server
 ensureDataDir().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  app.listen(PORT, HOST, () => {
+    console.log(`Server running on ${HOST}:${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Current directory: ${__dirname}`);
   });
+}).catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });
