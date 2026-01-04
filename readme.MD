@@ -63,8 +63,23 @@ git push -u origin main
 6. Set build command to: `npm install`
 7. Set start command to: `npm start`
 8. Add environment variables:
-   - `PORT` (Hostinger will usually set this automatically)
-   - `ANTHROPIC_API_KEY` (optional - only if you want AI responses)
+   - Click "Add Environment Variable" or similar
+   - **Key:** `GEMINI_API_KEY`
+   - **Value:** Your actual Gemini API key (starts with `AIza...`)
+   - Click Save/Add
+9. **Important:** Make sure you're adding to "Environment Variables" section, NOT uploading a `.env` file
+
+**Troubleshooting Hostinger Environment Variables:**
+- Some Hostinger plans may require you to set variables in a different location
+- Check: Application Settings → Environment Variables
+- Check: Node.js Application → Environment section
+- Verify the variable is saved (refresh the page to confirm)
+- After adding variables, **restart/redeploy** the application
+
+**To verify variables are working:**
+- Visit: `https://yourdomain.com/api/env-debug`
+- Should show: `hasGeminiKey: true` and `geminiKeyLength: 39` (or similar)
+- If it shows `false`, the environment variable isn't being loaded
 
 #### Step 3: Deploy
 

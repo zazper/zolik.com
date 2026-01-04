@@ -6,7 +6,34 @@ const fsSync = require('fs');
 const app = express();
 
 // Load environment variables from .env file (for local development)
-require('dotenv').config();
+// Hostinger should provide env vars directly, but this won't hurt
+try {
+  require('dotenv').config();
+} catch (err) {
+  console.log('dotenv not available or .env file not found (this is normal for production)');
+}
+
+// Alternative: Try to read from a config file if env vars not available
+// This is a fallback for hosting providers with non-standard env var handling
+if (!process.env.GEMINI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+  try {
+    // Check if there's a server-config.json file (you could create this manually on Hostinger)
+    const serverConfigPath = path.join(__dirname, 'server-config.json');
+    if (fsSync.existsSync(serverConfigPath)) {
+      const serverConfig = JSON.parse(fsSync.readFileSync(serverConfigPath, 'utf8'));
+      if (serverConfig.GEMINI_API_KEY) {
+        process.env.GEMINI_API_KEY = serverConfig.GEMINI_API_KEY;
+        console.log('Loaded GEMINI_API_KEY from server-config.json');
+      }
+      if (serverConfig.ANTHROPIC_API_KEY) {
+        process.env.ANTHROPIC_API_KEY = serverConfig.ANTHROPIC_API_KEY;
+        console.log('Loaded ANTHROPIC_API_KEY from server-config.json');
+      }
+    }
+  } catch (err) {
+    console.log('Could not load server-config.json (this is normal if not using config file)');
+  }
+}
 
 // Hostinger provides PORT via environment variable
 // Default to 3000 for local development
@@ -45,7 +72,11 @@ log('Application starting...');
 log(`PORT: ${PORT}`);
 log(`HOST: ${HOST}`);
 log(`Directory: ${__dirname}`);
+log(`Node version: ${process.version}`);
+log(`Platform: ${process.platform}`);
+log(`Environment: ${process.env.NODE_ENV || 'not set'}`);
 log(`GEMINI_API_KEY present: ${!!process.env.GEMINI_API_KEY}`);
+log(`GEMINI_API_KEY length: ${process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0}`);
 log(`ANTHROPIC_API_KEY present: ${!!process.env.ANTHROPIC_API_KEY}`);
 
 // Middleware
@@ -74,6 +105,34 @@ app.get('/debug', async (req, res) => {
       configExists: configExists,
       nodeVersion: process.version,
       env: process.env.NODE_ENV || 'not set'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Debug endpoint to check environment variables
+app.get('/api/env-debug', async (req, res) => {
+  try {
+    res.json({
+      nodeVersion: process.version,
+      platform: process.platform,
+      environment: process.env.NODE_ENV || 'not set',
+      port: PORT,
+      host: HOST,
+      hasGeminiKey: !!process.env.GEMINI_API_KEY,
+      geminiKeyLength: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0,
+      hasClaudeKey: !!process.env.ANTHROPIC_API_KEY,
+      // Show first/last 4 chars of key for verification (safe)
+      geminiKeyPreview: process.env.GEMINI_API_KEY ? 
+        `${process.env.GEMINI_API_KEY.substring(0, 4)}...${process.env.GEMINI_API_KEY.substring(process.env.GEMINI_API_KEY.length - 4)}` : 
+        'not set',
+      allEnvKeys: Object.keys(process.env).filter(key => 
+        !key.includes('PASSWORD') && 
+        !key.includes('SECRET') && 
+        !key.includes('KEY') &&
+        !key.includes('TOKEN')
+      )
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
