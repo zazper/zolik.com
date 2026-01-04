@@ -7,10 +7,15 @@
     "start": "node server.js",
     "dev": "node server.js"
   },
-  "keywords": ["homepage", "portfolio", "nodejs"],
+  "keywords": [
+    "homepage",
+    "portfolio",
+    "nodejs"
+  ],
   "author": "Z Olik",
   "license": "MIT",
   "dependencies": {
+    "dotenv": "^17.2.3",
     "express": "^4.18.2"
   },
   "engines": {

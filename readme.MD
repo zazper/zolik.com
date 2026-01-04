@@ -17,15 +17,25 @@ A simple Node.js web application for your personal homepage.
 # Install dependencies
 npm install
 
-# Create .env file (optional - for AI features)
+# Create .env file for local development
 cp .env.example .env
-# Edit .env and add your ANTHROPIC_API_KEY if you want AI responses
+
+# Edit .env and add your API keys
+# Example:
+# PORT=3000
+# GEMINI_API_KEY=AIzaSyD1234567890abcdefghijklmnop
+# ANTHROPIC_API_KEY=sk-ant-1234567890 (optional)
 
 # Start the server
 npm start
 ```
 
 Visit http://localhost:3000
+
+**Important for local testing:**
+- The `.env` file is ignored by Git (it's in `.gitignore`)
+- Never commit your `.env` file with real API keys
+- Use `.env.example` as a template
 
 ### 2. Deploy to Hostinger via GitHub
 
@@ -80,11 +90,44 @@ You can also edit `public/index.html` for styling and layout changes.
 ## Environment Variables
 
 - `PORT`: Server port (default: 3000)
-- `ANTHROPIC_API_KEY`: Optional - enables AI responses to queries
+- `GEMINI_API_KEY`: Optional - enables Google Gemini AI responses
+- `ANTHROPIC_API_KEY`: Optional - enables Claude AI responses
 
-Without the API key, queries will still be logged but won't receive AI responses.
+**AI Provider Configuration:**
+Set `aiProvider` in `config.json` to either `"gemini"` (default) or `"claude"`.
+The app will use the specified provider if the API key is available, otherwise it falls back to the other provider or just logs queries.
 
-## File Structure
+**Getting API Keys:**
+
+### Google Gemini API Key (Recommended - Free & Easy):
+1. Visit https://makersuite.google.com/app/apikey
+2. Sign in with your Google account
+3. Click "Create API Key" or "Get API Key"
+4. The system may prompt you to create/select a Google Cloud project (this happens automatically in the background)
+5. Copy your API key
+6. **Important**: The API key is all you need - no project name or project number required in your code
+7. **Free tier**: 60 requests per minute, no credit card required
+
+**Note about Google Cloud Projects:**
+- When you create a Gemini API key, it's automatically associated with a Google Cloud project behind the scenes
+- You don't need to reference the project ID, project name, or project number anywhere in your code
+- The API key contains all the necessary authentication information
+- We use Google AI Studio API (not Vertex AI), which only requires the API key
+
+### Claude API Key (Optional - Premium):
+1. Visit https://console.anthropic.com
+2. Sign up or log in
+3. Go to "API Keys" section in the dashboard
+4. Click "Create Key"
+5. Copy your API key
+6. **Note**: Claude requires payment setup after free trial credits are used
+7. More powerful for complex queries, but costs money after free tier
+
+**Recommendation:** Start with Gemini (free, generous limits) and add Claude later if needed.
+
+Without any API key, queries will still be logged but won't receive AI responses.
+
+## Security Considerations
 
 ```
 ├── server.js           # Main server file
