@@ -62,10 +62,20 @@ Click "Deploy" and Hostinger will automatically deploy your application!
 
 ## Customization
 
-Edit `public/index.html` to update:
-- Your name in the header
-- Your profile links (LinkedIn, GitHub, Resume)
-- Any text or styling
+Edit `config.json` to update your personal information:
+```json
+{
+  "name": "Your Name",
+  "tagline": "Developer | Creator | Thinker",
+  "links": {
+    "linkedin": "https://linkedin.com/in/yourprofile",
+    "resume": "/resume.pdf",
+    "github": "https://github.com/yourusername"
+  }
+}
+```
+
+You can also edit `public/index.html` for styling and layout changes.
 
 ## Environment Variables
 
@@ -79,6 +89,7 @@ Without the API key, queries will still be logged but won't receive AI responses
 ```
 ├── server.js           # Main server file
 ├── package.json        # Dependencies
+├── config.json         # Your personal info (EDIT THIS!)
 ├── public/
 │   └── index.html     # Frontend HTML/CSS/JS
 ├── data/
