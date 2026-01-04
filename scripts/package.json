@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "postinstall": "node -e \"const fs=require('fs');fs.mkdirSync('data',{recursive:true});if(!fs.existsSync('data/queries.json'))fs.writeFileSync('data/queries.json','[]');\""
+  }
+}
