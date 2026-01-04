@@ -1,9 +1,12 @@
 {
-  "name": "Zbigiew Olik (aka Bill)",
-  "tagline": "Developer | Creator | Thinker",
+  "name": "Zig Olik",
+  "tagline": "Developer | Quant | Musician | Creator | Thinker",
+  "about": "I'm a passionate developer with expertise in full-stack development, AI integration, and building scalable web applications. I love turning ideas into reality and helping businesses grow through technology.",
+  "email": "zig@zolik.com",
   "links": {
     "linkedin": "https://linkedin.com/in/billolik",
     "resume": "/Bill_Olik_Resume_2025.pdf",
     "github": "https://github.com/zazper"
-  }
+  },
+  "debug": false
 }

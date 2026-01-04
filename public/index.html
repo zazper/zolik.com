@@ -32,7 +32,7 @@
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 60px 40px;
+            padding: 60px 40px 40px 40px;
             text-align: center;
         }
 
@@ -45,6 +45,17 @@
         .header p {
             font-size: 1.2em;
             opacity: 0.9;
+        }
+
+        .about-section {
+            max-width: 700px;
+            margin: 25px auto 0;
+            padding: 20px 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            line-height: 1.8;
+            font-size: 1.05em;
         }
 
         .links {
@@ -68,6 +79,39 @@
         .links a:hover {
             background: rgba(255,255,255,0.3);
             transform: translateY(-2px);
+        }
+
+        .contact-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .contact-section h2 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .contact-section p {
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .contact-button {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: transform 0.3s;
+        }
+
+        .contact-button:hover {
+            transform: scale(1.05);
         }
 
         .content {
@@ -196,6 +240,58 @@
             background: #764ba2;
         }
 
+        .arcade-game {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .arcade-game h2 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        #arcadeCanvas {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #000;
+            display: block;
+            margin: 20px auto;
+            max-width: 100%;
+        }
+
+        .arcade-controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .arcade-controls button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: 600;
+        }
+
+        .arcade-controls button:hover {
+            background: #764ba2;
+        }
+
+        .game-info {
+            margin-top: 15px;
+            font-size: 1.1em;
+            color: #333;
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2em;
@@ -221,6 +317,9 @@
         <div class="header">
             <h1 id="userName">Loading...</h1>
             <p id="userTagline">Loading...</p>
+            <div class="about-section">
+                <p id="aboutText">Loading...</p>
+            </div>
             <div class="links">
                 <a id="linkedinLink" href="#" target="_blank" style="pointer-events: none;">LinkedIn</a>
                 <a id="resumeLink" href="#" target="_blank" style="pointer-events: none;">Resume</a>
@@ -229,6 +328,12 @@
         </div>
 
         <div class="content">
+            <div class="contact-section">
+                <h2>Get in Touch</h2>
+                <p>Interested in working together? Have a question? Feel free to reach out!</p>
+                <a id="contactButton" href="#" class="contact-button">Contact Me</a>
+            </div>
+
             <div class="query-section">
                 <h2>What is on your mind today?</h2>
                 <p>Ask me anything or share your thoughts. I'll do my best to help!</p>
@@ -249,22 +354,55 @@
                     <button id="colorBtn">Random Colors</button>
                 </div>
             </div>
+
+            <div class="arcade-game">
+                <h2>Want to Play?</h2>
+                <p>Classic Space Invaders - Use arrow keys to move, spacebar to shoot!</p>
+                <canvas id="arcadeCanvas" width="600" height="400"></canvas>
+                <div class="game-info">
+                    <span id="gameScore">Score: 0</span> | 
+                    <span id="gameLives">Lives: 3</span>
+                </div>
+                <div class="arcade-controls">
+                    <button id="startGameBtn">Start Game</button>
+                    <button id="pauseGameBtn">Pause</button>
+                </div>
+                <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
+                    Desktop: Arrow keys to move, Spacebar to shoot<br>
+                    Mobile: Use the on-screen buttons
+                </p>
+            </div>
         </div>
     </div>
 
     <script>
+        // Debug helper
+        let DEBUG = false;
+        function debugLog(...args) {
+            if (DEBUG) console.log(...args);
+        }
+
         // Load configuration FIRST
         (async function loadConfig() {
             try {
                 const response = await fetch('/api/config');
                 const config = await response.json();
                 
-                console.log('Config loaded:', config); // Debug log
+                // Set debug mode
+                DEBUG = config.debug || false;
+                debugLog('Config loaded:', config);
                 
                 // Update header
                 document.getElementById('userName').textContent = config.name;
                 document.getElementById('userTagline').textContent = config.tagline;
+                document.getElementById('aboutText').textContent = config.about || '';
                 document.title = `${config.name} - Personal Homepage`;
+                
+                // Update contact button
+                const contactBtn = document.getElementById('contactButton');
+                if (config.email) {
+                    contactBtn.href = `mailto:${config.email}?subject=Let's Connect&body=Hi ${config.name},%0D%0A%0D%0AI'd like to get in touch with you.`;
+                }
                 
                 // Update links - re-enable pointer events and set hrefs
                 const linkedinLink = document.getElementById('linkedinLink');
@@ -333,6 +471,8 @@
         });
 
         // Particle game
+        debugLog('Initializing particle playground...');
+        
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const particles = [];
@@ -344,10 +484,15 @@
 
         // Set canvas size properly
         function resizeCanvas() {
-            const container = canvas.parentElement;
-            const maxWidth = Math.min(800, container.clientWidth - 60);
-            canvas.width = maxWidth;
-            canvas.height = 400;
+            try {
+                const container = canvas.parentElement;
+                const maxWidth = Math.min(800, container.clientWidth - 60);
+                canvas.width = maxWidth;
+                canvas.height = 400;
+                debugLog(`Canvas resized to ${canvas.width}x${canvas.height}`);
+            } catch (error) {
+                console.error('Error resizing canvas:', error);
+            }
         }
         
         resizeCanvas();
@@ -441,6 +586,7 @@
 
         // Mouse events
         canvas.addEventListener('mousedown', (e) => {
+            debugLog('Mouse down');
             isMouseDown = true;
             const pos = getMousePos(e);
             mouseX = pos.x;
@@ -454,6 +600,7 @@
         });
 
         canvas.addEventListener('mouseup', () => {
+            debugLog('Mouse up');
             isMouseDown = false;
         });
 
@@ -463,6 +610,7 @@
 
         // Touch events for mobile
         canvas.addEventListener('touchstart', (e) => {
+            debugLog('Touch start');
             e.preventDefault();
             isMouseDown = true;
             const pos = getTouchPos(e);
@@ -478,17 +626,20 @@
         });
 
         canvas.addEventListener('touchend', (e) => {
+            debugLog('Touch end');
             e.preventDefault();
             isMouseDown = false;
         });
 
         // Button controls
         document.getElementById('clearBtn').addEventListener('click', () => {
+            debugLog('Clear button clicked');
             particles.length = 0;
         });
 
         document.getElementById('gravityBtn').addEventListener('click', () => {
             gravity = !gravity;
+            debugLog('Gravity toggled:', gravity);
         });
 
         document.getElementById('colorBtn').addEventListener('click', () => {
@@ -497,10 +648,222 @@
             } else {
                 colorMode = 'rainbow';
             }
+            debugLog('Color mode changed:', colorMode);
         });
 
         // Start animation
+        debugLog('Starting particle animation...');
         animate();
+
+        // ===== SPACE INVADERS GAME =====
+        const arcadeCanvas = document.getElementById('arcadeCanvas');
+        const arcadeCtx = arcadeCanvas.getContext('2d');
+        
+        let gameRunning = false;
+        let gamePaused = false;
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        
+        // Player
+        const player = {
+            x: arcadeCanvas.width / 2 - 25,
+            y: arcadeCanvas.height - 50,
+            width: 50,
+            height: 30,
+            speed: 5,
+            color: '#00ff00'
+        };
+        
+        // Bullets
+        let bullets = [];
+        const bulletSpeed = 7;
+        
+        // Enemies
+        let enemies = [];
+        let enemyDirection = 1;
+        let enemySpeed = 1;
+        
+        // Keys
+        const keys = {};
+        
+        function createEnemies() {
+            enemies = [];
+            const rows = 3 + Math.floor(level / 2);
+            const cols = 8;
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    enemies.push({
+                        x: col * 60 + 50,
+                        y: row * 40 + 50,
+                        width: 40,
+                        height: 30,
+                        alive: true
+                    });
+                }
+            }
+        }
+        
+        function drawPlayer() {
+            arcadeCtx.fillStyle = player.color;
+            arcadeCtx.fillRect(player.x, player.y, player.width, player.height);
+            // Draw turret
+            arcadeCtx.fillRect(player.x + 20, player.y - 10, 10, 10);
+        }
+        
+        function drawEnemies() {
+            enemies.forEach(enemy => {
+                if (enemy.alive) {
+                    arcadeCtx.fillStyle = '#ff0000';
+                    arcadeCtx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                    // Draw eyes
+                    arcadeCtx.fillStyle = '#fff';
+                    arcadeCtx.fillRect(enemy.x + 10, enemy.y + 10, 8, 8);
+                    arcadeCtx.fillRect(enemy.x + 22, enemy.y + 10, 8, 8);
+                }
+            });
+        }
+        
+        function drawBullets() {
+            arcadeCtx.fillStyle = '#ffff00';
+            bullets.forEach(bullet => {
+                arcadeCtx.fillRect(bullet.x, bullet.y, 4, 10);
+            });
+        }
+        
+        function updateGame() {
+            if (!gameRunning || gamePaused) return;
+            
+            // Clear canvas
+            arcadeCtx.fillStyle = '#000';
+            arcadeCtx.fillRect(0, 0, arcadeCanvas.width, arcadeCanvas.height);
+            
+            // Move player
+            if (keys['ArrowLeft'] && player.x > 0) {
+                player.x -= player.speed;
+            }
+            if (keys['ArrowRight'] && player.x < arcadeCanvas.width - player.width) {
+                player.x += player.speed;
+            }
+            
+            // Move bullets
+            bullets = bullets.filter(bullet => {
+                bullet.y -= bulletSpeed;
+                return bullet.y > 0;
+            });
+            
+            // Move enemies
+            let hitEdge = false;
+            enemies.forEach(enemy => {
+                if (enemy.alive) {
+                    enemy.x += enemySpeed * enemyDirection;
+                    if (enemy.x <= 0 || enemy.x >= arcadeCanvas.width - enemy.width) {
+                        hitEdge = true;
+                    }
+                }
+            });
+            
+            if (hitEdge) {
+                enemyDirection *= -1;
+                enemies.forEach(enemy => {
+                    enemy.y += 20;
+                });
+            }
+            
+            // Check collisions
+            bullets.forEach((bullet, bIndex) => {
+                enemies.forEach(enemy => {
+                    if (enemy.alive &&
+                        bullet.x < enemy.x + enemy.width &&
+                        bullet.x + 4 > enemy.x &&
+                        bullet.y < enemy.y + enemy.height &&
+                        bullet.y + 10 > enemy.y) {
+                        enemy.alive = false;
+                        bullets.splice(bIndex, 1);
+                        score += 10;
+                        document.getElementById('gameScore').textContent = `Score: ${score}`;
+                    }
+                });
+            });
+            
+            // Check if enemies reached player
+            enemies.forEach(enemy => {
+                if (enemy.alive && enemy.y + enemy.height >= player.y) {
+                    lives--;
+                    document.getElementById('gameLives').textContent = `Lives: ${lives}`;
+                    if (lives <= 0) {
+                        endGame();
+                    } else {
+                        createEnemies();
+                    }
+                }
+            });
+            
+            // Check if all enemies defeated
+            if (enemies.every(e => !e.alive)) {
+                level++;
+                enemySpeed += 0.5;
+                createEnemies();
+            }
+            
+            // Draw everything
+            drawPlayer();
+            drawEnemies();
+            drawBullets();
+            
+            requestAnimationFrame(updateGame);
+        }
+        
+        function startGame() {
+            gameRunning = true;
+            gamePaused = false;
+            score = 0;
+            lives = 3;
+            level = 1;
+            enemySpeed = 1;
+            bullets = [];
+            document.getElementById('gameScore').textContent = `Score: ${score}`;
+            document.getElementById('gameLives').textContent = `Lives: ${lives}`;
+            createEnemies();
+            updateGame();
+        }
+        
+        function endGame() {
+            gameRunning = false;
+            arcadeCtx.fillStyle = '#fff';
+            arcadeCtx.font = '30px Arial';
+            arcadeCtx.textAlign = 'center';
+            arcadeCtx.fillText('Game Over!', arcadeCanvas.width / 2, arcadeCanvas.height / 2);
+            arcadeCtx.font = '20px Arial';
+            arcadeCtx.fillText(`Final Score: ${score}`, arcadeCanvas.width / 2, arcadeCanvas.height / 2 + 40);
+        }
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === ' ' && gameRunning && !gamePaused) {
+                e.preventDefault();
+                bullets.push({
+                    x: player.x + player.width / 2 - 2,
+                    y: player.y
+                });
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        // Button controls
+        document.getElementById('startGameBtn').addEventListener('click', startGame);
+        document.getElementById('pauseGameBtn').addEventListener('click', () => {
+            if (gameRunning) {
+                gamePaused = !gamePaused;
+                if (!gamePaused) updateGame();
+            }
+        });
+        
+        debugLog('Space Invaders game initialized');
     </script>
 </body>
 </html>
