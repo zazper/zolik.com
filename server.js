@@ -85,7 +85,17 @@ app.use(express.static('public'));
 
 // Health check endpoint for monitoring
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    env: {
+      hasGeminiKey: !!process.env.GEMINI_API_KEY,
+      geminiKeyLength: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0,
+      hasClaudeKey: !!process.env.ANTHROPIC_API_KEY,
+      nodeVersion: process.version,
+      platform: process.platform
+    }
+  });
 });
 
 // Debug endpoint to check file system
