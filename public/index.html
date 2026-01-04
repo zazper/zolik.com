@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Name - Personal Homepage</title>
+    <title>Personal Homepage</title>
     <style>
         * {
             margin: 0;
@@ -219,12 +219,12 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Your Name</h1>
-            <p>Developer | Creator | Thinker</p>
+            <h1 id="userName">Loading...</h1>
+            <p id="userTagline">Loading...</p>
             <div class="links">
-                <a href="https://linkedin.com/in/yourprofile" target="_blank">LinkedIn</a>
-                <a href="/resume.pdf" target="_blank">Resume</a>
-                <a href="https://github.com/yourusername" target="_blank">GitHub</a>
+                <a id="linkedinLink" href="#" target="_blank">LinkedIn</a>
+                <a id="resumeLink" href="#" target="_blank">Resume</a>
+                <a id="githubLink" href="#" target="_blank">GitHub</a>
             </div>
         </div>
 
@@ -253,6 +253,30 @@
     </div>
 
     <script>
+        // Load configuration FIRST
+        (async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                
+                console.log('Config loaded:', config); // Debug log
+                
+                // Update header
+                document.getElementById('userName').textContent = config.name;
+                document.getElementById('userTagline').textContent = config.tagline;
+                document.title = `${config.name} - Personal Homepage`;
+                
+                // Update links
+                document.getElementById('linkedinLink').href = config.links.linkedin;
+                document.getElementById('resumeLink').href = config.links.resume;
+                document.getElementById('githubLink').href = config.links.github;
+            } catch (error) {
+                console.error('Error loading config:', error);
+                document.getElementById('userName').textContent = 'Welcome';
+                document.getElementById('userTagline').textContent = 'Personal Homepage';
+            }
+        })();
+
         // Query handling
         const queryInput = document.getElementById('queryInput');
         const submitBtn = document.getElementById('submitBtn');

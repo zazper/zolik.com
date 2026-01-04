@@ -129,6 +129,17 @@ app.get('/api/queries', async (req, res) => {
   }
 });
 
+// Get config
+app.get('/api/config', async (req, res) => {
+  try {
+    const config = JSON.parse(await fs.readFile('./config.json', 'utf8'));
+    res.json(config);
+  } catch (error) {
+    console.error('Error reading config:', error);
+    res.status(500).json({ error: 'Failed to load configuration' });
+  }
+});
+
 // Serve main page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
