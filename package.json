@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+	"postinstall": "node -e \"const fs=require('fs');fs.mkdirSync('data',{recursive:true});if(!fs.existsSync('data/queries.json'))fs.writeFileSync('data/queries.json','[]');\""
   },
   "keywords": [
     "homepage",
