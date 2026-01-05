@@ -17,21 +17,39 @@ try {
 // This is a fallback for hosting providers with non-standard env var handling
 if (!process.env.GEMINI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
   try {
-    // Check if there's a server-config.json file (you could create this manually on Hostinger)
-    const serverConfigPath = path.join(__dirname,  '..', 'server-config.json');
-    if (fsSync.existsSync(serverConfigPath)) {
-      const serverConfig = JSON.parse(fsSync.readFileSync(serverConfigPath, 'utf8'));
-      if (serverConfig.GEMINI_API_KEY) {
-        process.env.GEMINI_API_KEY = serverConfig.GEMINI_API_KEY;
-        console.log('Loaded GEMINI_API_KEY from server-config.json');
-      }
-      if (serverConfig.ANTHROPIC_API_KEY) {
-        process.env.ANTHROPIC_API_KEY = serverConfig.ANTHROPIC_API_KEY;
-        console.log('Loaded ANTHROPIC_API_KEY from server-config.json');
+    // Check multiple locations for server-config.json
+    // Priority: 1) Parent directory, 2) Current directory
+    const configLocations = [
+      path.join(__dirname, '..', 'server-config.json'),  // Parent directory (priority)
+      path.join(__dirname, 'server-config.json')          // Current directory (fallback)
+    ];
+    
+    let configLoaded = false;
+    
+    for (const configPath of configLocations) {
+      if (fsSync.existsSync(configPath)) {
+        console.log(`Found server-config.json at: ${configPath}`);
+        const serverConfig = JSON.parse(fsSync.readFileSync(configPath, 'utf8'));
+        
+        if (serverConfig.GEMINI_API_KEY) {
+          process.env.GEMINI_API_KEY = serverConfig.GEMINI_API_KEY;
+          console.log(`Loaded GEMINI_API_KEY from ${configPath}`);
+        }
+        if (serverConfig.ANTHROPIC_API_KEY) {
+          process.env.ANTHROPIC_API_KEY = serverConfig.ANTHROPIC_API_KEY;
+          console.log(`Loaded ANTHROPIC_API_KEY from ${configPath}`);
+        }
+        
+        configLoaded = true;
+        break; // Stop after loading from first found location
       }
     }
+    
+    if (!configLoaded) {
+      console.log('No server-config.json found in parent or current directory (this is normal if using env vars)');
+    }
   } catch (err) {
-    console.log('Could not load server-config.json (this is normal if not using config file)');
+    console.log(`Could not load server-config.json: ${err.message}`);
   }
 }
 
@@ -178,16 +196,6 @@ app.get('/api/gemini-models', async (req, res) => {
   }
 });
 
-
-// List available Gemini models (for debugging)
-app.get('/api/getenv', async (req, res) => {
-  // WARNING: This exposes ALL environment variables. Use with extreme caution.
-  res.status(200).json({
-    success: true,
-    environmentVariables: process.env
-  });
-});
-
 // Ensure data directory exists
 const DATA_DIR = './data';
 const QUERIES_FILE = path.join(DATA_DIR, 'queries.json');
@@ -203,10 +211,49 @@ async function ensureDataDir() {
   
   try {
     await fs.access(QUERIES_FILE);
-    log('Queries file exists');
+    // Verify the file has valid JSON
+    const content = await fs.readFile(QUERIES_FILE, 'utf8');
+    if (!content || content.trim() === '') {
+      log('Queries file is empty, initializing with empty array');
+      await fs.writeFile(QUERIES_FILE, JSON.stringify([]));
+    } else {
+      try {
+        JSON.parse(content);
+        log('Queries file exists and is valid');
+      } catch (parseError) {
+        log('Queries file exists but is corrupted, resetting');
+        await fs.writeFile(QUERIES_FILE, JSON.stringify([]));
+      }
+    }
   } catch {
     log('Creating queries file');
     await fs.writeFile(QUERIES_FILE, JSON.stringify([]));
+  }
+}
+
+// Helper function to safely read queries file
+async function readQueriesFile() {
+  try {
+    const content = await fs.readFile(QUERIES_FILE, 'utf8');
+    if (!content || content.trim() === '') {
+      return [];
+    }
+    return JSON.parse(content);
+  } catch (error) {
+    log(`Error reading queries file: ${error.message}, returning empty array`);
+    // Reset the file if it's corrupted
+    await fs.writeFile(QUERIES_FILE, JSON.stringify([]));
+    return [];
+  }
+}
+
+// Helper function to safely write queries file
+async function writeQueriesFile(queries) {
+  try {
+    await fs.writeFile(QUERIES_FILE, JSON.stringify(queries, null, 2));
+  } catch (error) {
+    log(`Error writing queries file: ${error.message}`);
+    throw error;
   }
 }
 
@@ -242,7 +289,7 @@ app.post('/api/log-query', async (req, res) => {
   try {
     const { query } = req.body;
     
-    const queries = JSON.parse(await fs.readFile(QUERIES_FILE, 'utf8'));
+    const queries = await readQueriesFile();
     
     queries.push({
       query,
@@ -250,7 +297,7 @@ app.post('/api/log-query', async (req, res) => {
       id: Date.now()
     });
     
-    await fs.writeFile(QUERIES_FILE, JSON.stringify(queries, null, 2));
+    await writeQueriesFile(queries);
     
     res.json({ success: true, message: 'Query logged successfully' });
   } catch (error) {
@@ -266,15 +313,6 @@ app.post('/api/query', async (req, res) => {
     
     log(`Received query: ${query}`);
     
-    // Log the query first
-    const queries = JSON.parse(await fs.readFile(QUERIES_FILE, 'utf8'));
-    queries.push({
-      query,
-      timestamp: new Date().toISOString(),
-      id: Date.now()
-    });
-    await fs.writeFile(QUERIES_FILE, JSON.stringify(queries, null, 2));
-    
     // Read config to determine AI provider
     const config = JSON.parse(await fs.readFile('./config.json', 'utf8'));
     const aiProvider = config.aiProvider || 'gemini'; // Default to Gemini
@@ -288,10 +326,30 @@ app.post('/api/query', async (req, res) => {
     log(`Gemini key available: ${!!geminiKey}`);
     log(`Claude key available: ${!!claudeKey}`);
     
+    // Prepare query log entry
+    const queryLogEntry = {
+      query,
+      timestamp: new Date().toISOString(),
+      id: Date.now(),
+      aiProvider: null,
+      modelUsed: null,
+      response: null,
+      status: 'pending',
+      error: null
+    };
+    
     if (!geminiKey && !claudeKey) {
       log('No API keys available');
+      queryLogEntry.status = 'no_api_key';
+      queryLogEntry.response = "Thanks for your message! I've logged it and will review it soon.";
+      
+      // Log the query
+      const queries = await readQueriesFile();
+      queries.push(queryLogEntry);
+      await writeQueriesFile(queries);
+      
       return res.json({
-        response: "Thanks for your message! I've logged it and will review it soon.",
+        response: queryLogEntry.response,
         isComplex: false
       });
     }
@@ -303,14 +361,23 @@ app.post('/api/query', async (req, res) => {
     log(`Query word count: ${wordCount}, isComplex: ${isComplex}`);
     
     if (isComplex) {
+      queryLogEntry.status = 'complex_query';
+      queryLogEntry.response = "This looks like a complex query! For detailed assistance, please visit my contact page or connect with me on LinkedIn.";
+      
+      // Log the query
+      const queries = await readQueriesFile();
+      queries.push(queryLogEntry);
+      await writeQueriesFile(queries);
+      
       return res.json({
-        response: "This looks like a complex query! For detailed assistance, please visit my contact page or connect with me on LinkedIn.",
+        response: queryLogEntry.response,
         isComplex: true,
         redirect: "/contact"
       });
     }
     
     let aiResponse;
+    let modelUsed = null;
     
     // Use Gemini if selected and key is available
     if (aiProvider === 'gemini' && geminiKey) {
@@ -360,9 +427,9 @@ app.post('/api/query', async (req, res) => {
               queryLogEntry.error = 'Rate limit exceeded';
               
               // Log the query
-              const queries = JSON.parse(await fs.readFile(QUERIES_FILE, 'utf8'));
+              const queries = await readQueriesFile();
               queries.push(queryLogEntry);
-              await fs.writeFile(QUERIES_FILE, JSON.stringify(queries, null, 2));
+              await writeQueriesFile(queries);
               
               return res.json({
                 response: queryLogEntry.response,
@@ -419,13 +486,34 @@ app.post('/api/query', async (req, res) => {
     else if (claudeKey) {
       log('Attempting to call Claude API...');
       aiResponse = await callClaudeAPI(query, claudeKey);
+      modelUsed = 'claude-sonnet-4';
     } else {
       log('No suitable AI provider available');
+      queryLogEntry.status = 'no_provider';
+      queryLogEntry.response = "Thanks for your message! I'll review it soon.";
+      
+      // Log the query
+      const queries = await readQueriesFile();
+      queries.push(queryLogEntry);
+      await writeQueriesFile(queries);
+      
       return res.json({
-        response: "Thanks for your message! I'll review it soon.",
+        response: queryLogEntry.response,
         isComplex: false
       });
     }
+    
+    // Log successful query with response
+    queryLogEntry.status = 'success';
+    queryLogEntry.aiProvider = aiProvider;
+    queryLogEntry.modelUsed = modelUsed;
+    queryLogEntry.response = aiResponse;
+    
+    const queries = await readQueriesFile();
+    queries.push(queryLogEntry);
+    await writeQueriesFile(queries);
+    
+    log(`✓ Query logged successfully with response from ${modelUsed}`);
     
     res.json({
       response: aiResponse,
@@ -435,6 +523,25 @@ app.post('/api/query', async (req, res) => {
   } catch (error) {
     log(`Error processing query: ${error.message}`);
     console.error('Error processing query:', error);
+    
+    // Log failed query
+    try {
+      const queries = await readQueriesFile();
+      queries.push({
+        query: req.body.query,
+        timestamp: new Date().toISOString(),
+        id: Date.now(),
+        status: 'error',
+        error: error.message,
+        aiProvider: null,
+        modelUsed: null,
+        response: "Thanks for your message! I'll review it soon."
+      });
+      await writeQueriesFile(queries);
+    } catch (logError) {
+      log(`Failed to log error: ${logError.message}`);
+    }
+    
     res.json({
       response: "Thanks for your message! I'll review it soon.",
       isComplex: false
@@ -468,7 +575,7 @@ async function callClaudeAPI(query, apiKey) {
 // Get all queries (for review)
 app.get('/api/queries', async (req, res) => {
   try {
-    const queries = JSON.parse(await fs.readFile(QUERIES_FILE, 'utf8'));
+    const queries = await readQueriesFile();
     res.json(queries);
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve queries' });
