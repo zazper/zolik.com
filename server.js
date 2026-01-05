@@ -18,7 +18,7 @@ try {
 if (!process.env.GEMINI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
   try {
     // Check if there's a server-config.json file (you could create this manually on Hostinger)
-    const serverConfigPath = path.join(__dirname, 'server-config.json');
+    const serverConfigPath = path.join(__dirname,  '..', 'server-config.json');
     if (fsSync.existsSync(serverConfigPath)) {
       const serverConfig = JSON.parse(fsSync.readFileSync(serverConfigPath, 'utf8'));
       if (serverConfig.GEMINI_API_KEY) {
