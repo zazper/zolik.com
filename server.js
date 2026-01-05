@@ -178,6 +178,16 @@ app.get('/api/gemini-models', async (req, res) => {
   }
 });
 
+
+// List available Gemini models (for debugging)
+app.get('/api/getenv', async (req, res) => {
+  // WARNING: This exposes ALL environment variables. Use with extreme caution.
+  res.status(200).json({
+    success: true,
+    environmentVariables: process.env
+  });
+});
+
 // Ensure data directory exists
 const DATA_DIR = './data';
 const QUERIES_FILE = path.join(DATA_DIR, 'queries.json');
