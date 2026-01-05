@@ -376,6 +376,10 @@
                     <button id="fireBtn" class="fire-btn">🔥 FIRE 🔥</button>
                 </div>
             </div>
+			
+			<div class="content">
+			<p>© 2025 All rights reserved.</p>
+			</div>
         </div>
     </div>
 
@@ -664,17 +668,6 @@
         const arcadeCanvas = document.getElementById('arcadeCanvas');
         const arcadeCtx = arcadeCanvas.getContext('2d');
         
-        // Make canvas responsive
-        function resizeArcadeCanvas() {
-            const container = arcadeCanvas.parentElement;
-            const maxWidth = Math.min(600, container.clientWidth - 60);
-            arcadeCanvas.width = maxWidth;
-            arcadeCanvas.height = Math.min(400, maxWidth * 0.67); // Maintain aspect ratio
-        }
-        
-        resizeArcadeCanvas();
-        window.addEventListener('resize', resizeArcadeCanvas);
-        
         let gameRunning = false;
         let gamePaused = false;
         let score = 0;
@@ -683,19 +676,13 @@
         
         // Player
         const player = {
-            x: 0,
-            y: 0,
+            x: arcadeCanvas.width / 2 - 25,
+            y: arcadeCanvas.height - 50,
             width: 50,
             height: 30,
             speed: 5,
             color: '#00ff00'
         };
-        
-        // Initialize player position
-        function initPlayerPosition() {
-            player.x = arcadeCanvas.width / 2 - player.width / 2;
-            player.y = arcadeCanvas.height - 50;
-        }
         
         // Bullets
         let bullets = [];
@@ -710,20 +697,17 @@
         const keys = {};
         const touch = {
             left: false,
-            right: false,
-            fire: false
+            right: false
         };
         
         function createEnemies() {
             enemies = [];
             const rows = 3 + Math.floor(level / 2);
-            const cols = Math.floor(arcadeCanvas.width / 60) - 1;
-            const startX = (arcadeCanvas.width - (cols * 60)) / 2;
-            
+            const cols = 8;
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
                     enemies.push({
-                        x: startX + col * 60,
+                        x: col * 60 + 50,
                         y: row * 40 + 50,
                         width: 40,
                         height: 30,
@@ -737,7 +721,7 @@
             arcadeCtx.fillStyle = player.color;
             arcadeCtx.fillRect(player.x, player.y, player.width, player.height);
             // Draw turret
-            arcadeCtx.fillRect(player.x + player.width/2 - 5, player.y - 10, 10, 10);
+            arcadeCtx.fillRect(player.x + 20, player.y - 10, 10, 10);
         }
         
         function drawEnemies() {
@@ -776,7 +760,7 @@
             arcadeCtx.fillStyle = '#000';
             arcadeCtx.fillRect(0, 0, arcadeCanvas.width, arcadeCanvas.height);
             
-            // Move player (keyboard or touch)
+            // Move player (keyboard OR touch controls)
             if ((keys['ArrowLeft'] || touch.left) && player.x > 0) {
                 player.x -= player.speed;
             }
@@ -862,7 +846,6 @@
             bullets = [];
             document.getElementById('gameScore').textContent = `Score: ${score}`;
             document.getElementById('gameLives').textContent = `Lives: ${lives}`;
-            initPlayerPosition();
             createEnemies();
             updateGame();
         }
@@ -870,10 +853,10 @@
         function endGame() {
             gameRunning = false;
             arcadeCtx.fillStyle = '#fff';
-            arcadeCtx.font = `${arcadeCanvas.width / 20}px Arial`;
+            arcadeCtx.font = '30px Arial';
             arcadeCtx.textAlign = 'center';
             arcadeCtx.fillText('Game Over!', arcadeCanvas.width / 2, arcadeCanvas.height / 2);
-            arcadeCtx.font = `${arcadeCanvas.width / 30}px Arial`;
+            arcadeCtx.font = '20px Arial';
             arcadeCtx.fillText(`Final Score: ${score}`, arcadeCanvas.width / 2, arcadeCanvas.height / 2 + 40);
         }
         
@@ -890,11 +873,12 @@
             keys[e.key] = false;
         });
         
-        // Touch controls for mobile
+        // Touch/Mobile controls
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
         const fireBtn = document.getElementById('fireBtn');
         
+        // Left button
         leftBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             touch.left = true;
@@ -903,10 +887,14 @@
             e.preventDefault();
             touch.left = false;
         });
-        leftBtn.addEventListener('mousedown', () => touch.left = true);
+        leftBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            touch.left = true;
+        });
         leftBtn.addEventListener('mouseup', () => touch.left = false);
         leftBtn.addEventListener('mouseleave', () => touch.left = false);
         
+        // Right button
         rightBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             touch.right = true;
@@ -915,10 +903,14 @@
             e.preventDefault();
             touch.right = false;
         });
-        rightBtn.addEventListener('mousedown', () => touch.right = true);
+        rightBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            touch.right = true;
+        });
         rightBtn.addEventListener('mouseup', () => touch.right = false);
         rightBtn.addEventListener('mouseleave', () => touch.right = false);
         
+        // Fire button
         fireBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             fireBullet();
@@ -928,7 +920,7 @@
             fireBullet();
         });
         
-        // Button controls
+        // Game control buttons
         document.getElementById('startGameBtn').addEventListener('click', startGame);
         document.getElementById('pauseGameBtn').addEventListener('click', () => {
             if (gameRunning) {
