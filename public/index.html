@@ -325,6 +325,9 @@
                 <a id="resumeLink" href="#" target="_blank" style="pointer-events: none;">Resume</a>
                 <a id="githubLink" href="#" target="_blank" style="pointer-events: none;">GitHub</a>
             </div>
+            <div class="about-section">
+                <p id="moreText">Loading...</p>
+            </div>
         </div>
 
         <div class="content">
@@ -396,6 +399,7 @@
                 document.getElementById('userName').textContent = config.name;
                 document.getElementById('userTagline').textContent = config.tagline;
                 document.getElementById('aboutText').textContent = config.about || '';
+                document.getElementById('moreText').textContent = config.more || '';
                 document.title = `${config.name} - Personal Homepage`;
                 
                 // Update contact button
