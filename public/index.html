@@ -325,9 +325,6 @@
                 <a id="resumeLink" href="#" target="_blank" style="pointer-events: none;">Resume</a>
                 <a id="githubLink" href="#" target="_blank" style="pointer-events: none;">GitHub</a>
             </div>
-            <div class="about-section">
-                <p id="moreText">Loading...</p>
-            </div>
         </div>
 
         <div class="content">
@@ -360,7 +357,7 @@
 
             <div class="arcade-game">
                 <h2>Want to Play?</h2>
-                <p>Classic Space Invaders - Use arrow keys to move, spacebar to shoot!</p>
+                <p>Classic Space Invaders - Use arrow keys or touch controls!</p>
                 <canvas id="arcadeCanvas" width="600" height="400"></canvas>
                 <div class="game-info">
                     <span id="gameScore">Score: 0</span> | 
@@ -370,10 +367,11 @@
                     <button id="startGameBtn">Start Game</button>
                     <button id="pauseGameBtn">Pause</button>
                 </div>
-                <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
-                    Desktop: Arrow keys to move, Spacebar to shoot<br>
-                    Mobile: Use the on-screen buttons
-                </p>
+                <div class="mobile-controls">
+                    <button id="leftBtn">◄ Left</button>
+                    <button id="rightBtn">Right ►</button>
+                    <button id="fireBtn" class="fire-btn">🔥 FIRE 🔥</button>
+                </div>
             </div>
         </div>
     </div>
@@ -399,7 +397,6 @@
                 document.getElementById('userName').textContent = config.name;
                 document.getElementById('userTagline').textContent = config.tagline;
                 document.getElementById('aboutText').textContent = config.about || '';
-                document.getElementById('moreText').textContent = config.more || '';
                 document.title = `${config.name} - Personal Homepage`;
                 
                 // Update contact button
@@ -663,6 +660,17 @@
         const arcadeCanvas = document.getElementById('arcadeCanvas');
         const arcadeCtx = arcadeCanvas.getContext('2d');
         
+        // Make canvas responsive
+        function resizeArcadeCanvas() {
+            const container = arcadeCanvas.parentElement;
+            const maxWidth = Math.min(600, container.clientWidth - 60);
+            arcadeCanvas.width = maxWidth;
+            arcadeCanvas.height = Math.min(400, maxWidth * 0.67); // Maintain aspect ratio
+        }
+        
+        resizeArcadeCanvas();
+        window.addEventListener('resize', resizeArcadeCanvas);
+        
         let gameRunning = false;
         let gamePaused = false;
         let score = 0;
@@ -671,13 +679,19 @@
         
         // Player
         const player = {
-            x: arcadeCanvas.width / 2 - 25,
-            y: arcadeCanvas.height - 50,
+            x: 0,
+            y: 0,
             width: 50,
             height: 30,
             speed: 5,
             color: '#00ff00'
         };
+        
+        // Initialize player position
+        function initPlayerPosition() {
+            player.x = arcadeCanvas.width / 2 - player.width / 2;
+            player.y = arcadeCanvas.height - 50;
+        }
         
         // Bullets
         let bullets = [];
@@ -688,17 +702,24 @@
         let enemyDirection = 1;
         let enemySpeed = 1;
         
-        // Keys
+        // Keys and touch controls
         const keys = {};
+        const touch = {
+            left: false,
+            right: false,
+            fire: false
+        };
         
         function createEnemies() {
             enemies = [];
             const rows = 3 + Math.floor(level / 2);
-            const cols = 8;
+            const cols = Math.floor(arcadeCanvas.width / 60) - 1;
+            const startX = (arcadeCanvas.width - (cols * 60)) / 2;
+            
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
                     enemies.push({
-                        x: col * 60 + 50,
+                        x: startX + col * 60,
                         y: row * 40 + 50,
                         width: 40,
                         height: 30,
@@ -712,7 +733,7 @@
             arcadeCtx.fillStyle = player.color;
             arcadeCtx.fillRect(player.x, player.y, player.width, player.height);
             // Draw turret
-            arcadeCtx.fillRect(player.x + 20, player.y - 10, 10, 10);
+            arcadeCtx.fillRect(player.x + player.width/2 - 5, player.y - 10, 10, 10);
         }
         
         function drawEnemies() {
@@ -735,6 +756,15 @@
             });
         }
         
+        function fireBullet() {
+            if (gameRunning && !gamePaused) {
+                bullets.push({
+                    x: player.x + player.width / 2 - 2,
+                    y: player.y
+                });
+            }
+        }
+        
         function updateGame() {
             if (!gameRunning || gamePaused) return;
             
@@ -742,11 +772,11 @@
             arcadeCtx.fillStyle = '#000';
             arcadeCtx.fillRect(0, 0, arcadeCanvas.width, arcadeCanvas.height);
             
-            // Move player
-            if (keys['ArrowLeft'] && player.x > 0) {
+            // Move player (keyboard or touch)
+            if ((keys['ArrowLeft'] || touch.left) && player.x > 0) {
                 player.x -= player.speed;
             }
-            if (keys['ArrowRight'] && player.x < arcadeCanvas.width - player.width) {
+            if ((keys['ArrowRight'] || touch.right) && player.x < arcadeCanvas.width - player.width) {
                 player.x += player.speed;
             }
             
@@ -828,6 +858,7 @@
             bullets = [];
             document.getElementById('gameScore').textContent = `Score: ${score}`;
             document.getElementById('gameLives').textContent = `Lives: ${lives}`;
+            initPlayerPosition();
             createEnemies();
             updateGame();
         }
@@ -835,10 +866,10 @@
         function endGame() {
             gameRunning = false;
             arcadeCtx.fillStyle = '#fff';
-            arcadeCtx.font = '30px Arial';
+            arcadeCtx.font = `${arcadeCanvas.width / 20}px Arial`;
             arcadeCtx.textAlign = 'center';
             arcadeCtx.fillText('Game Over!', arcadeCanvas.width / 2, arcadeCanvas.height / 2);
-            arcadeCtx.font = '20px Arial';
+            arcadeCtx.font = `${arcadeCanvas.width / 30}px Arial`;
             arcadeCtx.fillText(`Final Score: ${score}`, arcadeCanvas.width / 2, arcadeCanvas.height / 2 + 40);
         }
         
@@ -847,15 +878,50 @@
             keys[e.key] = true;
             if (e.key === ' ' && gameRunning && !gamePaused) {
                 e.preventDefault();
-                bullets.push({
-                    x: player.x + player.width / 2 - 2,
-                    y: player.y
-                });
+                fireBullet();
             }
         });
         
         document.addEventListener('keyup', (e) => {
             keys[e.key] = false;
+        });
+        
+        // Touch controls for mobile
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const fireBtn = document.getElementById('fireBtn');
+        
+        leftBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            touch.left = true;
+        });
+        leftBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            touch.left = false;
+        });
+        leftBtn.addEventListener('mousedown', () => touch.left = true);
+        leftBtn.addEventListener('mouseup', () => touch.left = false);
+        leftBtn.addEventListener('mouseleave', () => touch.left = false);
+        
+        rightBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            touch.right = true;
+        });
+        rightBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            touch.right = false;
+        });
+        rightBtn.addEventListener('mousedown', () => touch.right = true);
+        rightBtn.addEventListener('mouseup', () => touch.right = false);
+        rightBtn.addEventListener('mouseleave', () => touch.right = false);
+        
+        fireBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            fireBullet();
+        });
+        fireBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fireBullet();
         });
         
         // Button controls
@@ -867,7 +933,7 @@
             }
         });
         
-        debugLog('Space Invaders game initialized');
+        debugLog('Space Invaders game initialized with mobile controls');
     </script>
 </body>
 </html>
