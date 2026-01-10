@@ -9,5 +9,6 @@
     "resume": "/Bill_Olik_Resume_2025.pdf",
     "github": "https://github.com/zazper"
   },
+  "aiProvider": "gemini",
   "debug": false
 }
