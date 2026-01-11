@@ -164,7 +164,7 @@ This endpoint returns a JSON array of all queries with timestamps.
 ## Future Enhancements
 
 - Connect to n8n workflow for advanced query processing
-- Add database integration (MongoDB, PostgreSQL)
+- Add database integration (MongoDB, PostgreSQL, MySQL)
 - Add admin dashboard to review queries
 - Enhance AI logic with more sophisticated routing
 
